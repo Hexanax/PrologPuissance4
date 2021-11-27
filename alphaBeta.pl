@@ -1,7 +1,7 @@
 %%%%%%%%%%%% miniMax.pl %%%%%%%%%%%%
 % Implémentation de minimax avec diverses optimisations propres au Puissance 4.
 
-:- module(alphaBeta, [alphaBeta/6]).
+:- module(alphaBeta, [alphaBeta/7]).
 
 %%%%%%%%%%%%%%%%
 %% Inclusions %%
@@ -11,42 +11,54 @@
 
 :- use_module(util).
 
+couleurAdverse(jaune, rouge).
+couleurAdverse(rouge, jaune).
 
+alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value,Maximizer):- 
+    evaluate(CouleurJoueur, Value),!.
 
-alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value):- 
-    evaluate(CouleurJoueur, Value).
-
-alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value):- 
+alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value, Maximizer):- 
     Profondeur > 0,
     findall(X, (between(1,7,X),coupValide(X)), Moves),
-    Alpha1 is -Beta,
-    Beta1 is -Alpha,
     Profondeur1 is Profondeur -1,
-    evaluate_and_choose(Moves, CouleurJoueur, Profondeur1, Alpha1,Beta1,nil,(Move,Value)).
+    evaluate_and_choose(Moves, CouleurJoueur, Profondeur1, Alpha,Beta,nil,(Move,Value),Maximizer).
 
-alphaBeta(Profondeur, CouleurJoueur, Alpha,Beta,Move, Value):- 
-    Profondeur > 0,
-    alphaBeta(0, CouleurJoueur, Alpha,Beta,Move, Value).
 
-evaluate_and_choose([Move|Moves],CouleurJoueur,D,Alpha,Beta,Move1,BestMove) :- 
+
+evaluate_and_choose([Move|Moves],CouleurJoueur,Profondeur,Alpha,Beta,Record,BestMove,Maximizer) :- 
 	move(Move,CouleurJoueur,CouleurJoueurSuivant,Ligne),
-    alphaBeta(D,CouleurJoueurSuivant,Alpha,Beta,MoveX,Value),
+    alphaBeta(D,CouleurJoueurSuivant,Alpha,Beta,MoveX,Value, Maximizer),
     undoMove(Move, Ligne, CouleurJoueur),
-    Value1 is -Value,   
-    cutoff(Move,Value1,D,Alpha,Beta,Moves,CouleurJoueur,Move1,BestMove).
+    cutoff(Move,Value,Profondeur,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove, Maximizer).
 
-evaluate_and_choose([],CouleurJoueur,D,Alpha,Beta,Move,(Move,A)).
+evaluate_and_choose([],CouleurJoueur,Profondeur,Alpha,Beta,Move,(Move,Alpha),Maximizer).
  
  
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Move1,(Move,Value)) :- 
-	Value >= Beta.
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Move1,BestMove) :- 
-    Alpha < Value, 
-    Value < Beta, !,
-	evaluate_and_choose(Moves,CouleurJoueur,D,Value,Beta,Move,BestMove).
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Move1,BestMove) :-
-    Value =< Alpha, !,
-	evaluate_and_choose(Moves,CouleurJoueur,D,Alpha,Beta,Move1,BestMove).
+cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,(Move,Value),Maximizer) :- 
+    CouleurJoueur == Maximizer,
+	Value >= Beta, !.
+cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,(Move,Value),Maximizer) :- 
+    couleurAdverse(CouleurJoueur,Maximizer),
+	Value =< Alpha, !.
+
+cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
+    CouleurJoueur == Maximizer,
+    Value =< Alpha,
+	evaluate_and_choose(Moves,CouleurJoueur,D,Alpha,Beta,Record,BestMove, Maximizer).
+cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
+    CouleurJoueur == Maximizer,
+    Value > Alpha,
+	evaluate_and_choose(Moves,CouleurJoueur,D,Value,Beta,Move,BestMove, Maximizer).
+
+
+cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
+    couleurAdverse(CouleurJoueur,Maximizer),
+    Value >= Beta,
+	evaluate_and_choose(Moves,CouleurJoueur,D,Alpha,Beta,Record,BestMove,Maximizer).
+cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
+    couleurAdverse(CouleurJoueur,Maximizer),
+    Value < Beta,
+	evaluate_and_choose(Moves,CouleurJoueur,D,Alpha,Value,Move,BestMove,Maximizer).
     
     
 move(Move, CouleurJoueur, CouleurJoueurSuivant,Ligne):-
@@ -93,3 +105,5 @@ insererJeton(X,Y,C) :- calculPositionJeton(X, 1, Y), assert(caseTest(X,Y,C)).
 % Ligne s'unfinie à l'indice de la première ligne vide de la colonne.
 calculPositionJeton(X,YCheck,YCheck) :- caseVideTest(X,YCheck), !.
 calculPositionJeton(X,YCheck,Y) :- incr(YCheck, YCheck1), calculPositionJeton(X,YCheck1,Y).
+
+

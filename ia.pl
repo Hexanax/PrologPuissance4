@@ -52,4 +52,4 @@ iaMinimax(JoueurCourant,Coup,Profondeur,PoidsPosition,PoidsPuissance3,PoidsDensi
 iaAlphaBeta(JoueurCourant,Coup,Profondeur) :-
 	Alpha is -99999,
 	Beta is 99999,
-	alphaBeta(Profondeur, JoueurCourant, Alpha, Beta, Coup, _).
+	alphaBeta(Profondeur, JoueurCourant, Alpha, Beta, Coup, _, JoueurCourant).
