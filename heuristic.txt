@@ -1,0 +1,6 @@
+-7
+-densité
+-feature
+-position
+-victoire
+-danger de l'autre

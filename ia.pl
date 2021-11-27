@@ -5,6 +5,7 @@
 
 :- module(ia, [iaAleatoire/1
 			  ,iaMinimax/7
+			  ,iaAlphaBeta/3
 			  ,poidsPuissance3/1
 			  ,poidsPosition/1
 			  ,poidsDensite/1
@@ -18,6 +19,7 @@
 :- use_module(jeu).
 :- use_module(util).
 :- use_module(miniMax).
+:- use_module(alphaBeta).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Prédicats dynamiques %%
@@ -46,3 +48,8 @@ iaMinimax(JoueurCourant,Coup,Profondeur,PoidsPosition,PoidsPuissance3,PoidsDensi
 	assert(poidsDensite(PoidsDensite)),
 	assert(poidsAdjacence(PoidsAdjacence)),
 	parcoursArbre(JoueurCourant,Profondeur,Coup,_).
+
+iaAlphaBeta(JoueurCourant,Coup,Profondeur) :-
+	Alpha is -99999,
+	Beta is 99999,
+	alphaBeta(Profondeur, JoueurCourant, Alpha, Beta, Coup, _).
