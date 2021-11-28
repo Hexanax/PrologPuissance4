@@ -15,7 +15,7 @@ couleurAdverse(jaune, rouge).
 couleurAdverse(rouge, jaune).
 
 alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value,Maximizer):- 
-    evaluate(CouleurJoueur, Value),!.
+    evaluate(CouleurJoueur, Value), !.
 
 alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value, Maximizer):- 
     Profondeur > 0,
@@ -33,10 +33,10 @@ evaluate_and_choose([],CouleurJoueur,Profondeur,Alpha,Beta,Move,(Move,Alpha),Max
 
 cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,(Move,Value),Maximizer) :- 
     CouleurJoueur == Maximizer,
-	Value >= Beta, !.
+	Value >= Beta.
 cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,(Move,Value),Maximizer) :- 
     couleurAdverse(CouleurJoueur,Maximizer),
-	Value =< Alpha, !.
+	Value =< Alpha.
 
 cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
     CouleurJoueur == Maximizer,
@@ -60,15 +60,13 @@ move(Move, CouleurJoueur, CouleurJoueurSuivant,Ligne):-
     CouleurJoueur == jaune,
     CouleurJoueurSuivant = rouge,
     insererJeton(Move, Y, CouleurJoueur),
-    Ligne is Y,
-    !.
+    Ligne is Y.
 
 move(Move, CouleurJoueur, CouleurJoueurSuivant, Ligne):-
     CouleurJoueur == rouge,
     CouleurJoueurSuivant = jaune,
     insererJeton(Move, Y, CouleurJoueur),
-    Ligne is Y,
-    !.
+    Ligne is Y.
 
 undoMove(Move, Ligne, CouleurJoueur):-
     retract(caseTest(Move, Ligne, CouleurJoueur)).
@@ -78,8 +76,8 @@ evaluate(CouleurJoueur, Value):-
     Value is Score.
 
 eval(CouleurJoueur, Score):- 
-    forceColumnMove(CouleurJoueur, ScoreVictoire),
-    random_between(-6, 6, Perturbation),
+    dummyVictoire(CouleurJoueur, ScoreVictoire),
+    random_between(-10, 10, Perturbation),
     Score is (ScoreVictoire + Perturbation).
 
 %Forces the AI to play on the 2nd column because it gives a huge score to do so
@@ -96,11 +94,7 @@ forceColumnMove(CouleurJoueur, Score):-
 forceColumnMove(_, 0).
 
 dummyVictoire(CouleurJoueur, Score):-
-    Score is 0,
-    caseTest(1, 6, _),
-    caseTest(2, 6, _),
-    caseTest(3, 6, _),
-    caseTest(4, 6, _),
+    (caseTest(3, _, _)),
     Score is 1000.
 
 dummyVictoire(_, 0).
