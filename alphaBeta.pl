@@ -10,6 +10,7 @@
 :- dynamic caseTest/3.
 
 :- use_module(util).
+:- use_module(ia).
 
 couleurAdverse(jaune, rouge).
 couleurAdverse(rouge, jaune).
@@ -78,9 +79,12 @@ evaluate(CouleurJoueur, Value):-
     Value is Score.
 
 eval(CouleurJoueur, Score):- 
-    forceColumnMove(CouleurJoueur, ScoreVictoire),
-    random_between(-6, 6, Perturbation),
-    Score is (ScoreVictoire + Perturbation).
+    %%%%%% Call heuristics %%%%%%
+    poidsDefensif(PoidsDefensif),
+    defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
+    %%forceColumnMove(CouleurJoueur, ScoreVictoire),
+    random_between(-10, 10, Perturbation),
+    Score is ScoreDefensif + Perturbation.
 
 %Forces the AI to play on the 2nd column because it gives a huge score to do so
 forceColumnMove(CouleurJoueur, Score):-
@@ -123,6 +127,284 @@ insererJeton(X,Y,C) :- calculPositionJeton(X, 1, Y), assert(caseTest(X,Y,C)).
 % Ligne s'unfinie à l'indice de la première ligne vide de la colonne.
 calculPositionJeton(X,YCheck,YCheck) :- caseVideTest(X,YCheck), !.
 calculPositionJeton(X,YCheck,Y) :- incr(YCheck, YCheck1), calculPositionJeton(X,YCheck1,Y).
+
+%%%%%%%%%%% Commentaire heuristique de défense
+
+
+
+
+
+
+
+
+%%%%%%%%%%%
+
+defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif):- 
+    PoidsDefensif > 0,
+    findall(S, evalDangerAdverse(CouleurJoueur, S),Scores),
+    sum(Scores, ScoreDefensifTot),
+    ScoreDefensif is ScoreDefensifTot,!.
+defensiveIA(_, 0, _).
+
+evalDangerAdverse(CouleurJoueur, Score) :-
+    couleurAdverse(CouleurJoueur, JoueurAdverse),
+    caseTest(X,Y,JoueurAdverse),
+    calculerScoreAlignement(X, Y, JoueurAdverse, S),
+    Score is S * -1.
+
+calculerScoreAlignement(X,Y, CouleurJoueur, Score ):-
+    evaluerLigne(X,Y,CouleurJoueur,LigneGauche1, LigneGauche2, LigneGauche3, LigneDroite1, LigneDroite2, LigneDroite3),
+    evaluerColonne(X,Y,CouleurJoueur,ColonneGauche1, ColonneGauche2, ColonneGauche3, ColonneDroite1, ColonneDroite2, ColonneDroite3),
+    evaluerDiag1(X,Y,CouleurJoueur,Diag1Gauche1, Diag1Gauche2, Diag1Gauche3, Diag1Droite1, Diag1Droite2, Diag1Droite3),
+    evaluerDiag2(X,Y,CouleurJoueur,Diag2Gauche1, Diag2Gauche2, Diag2Gauche3, Diag2Droite1, Diag2Droite2, Diag2Droite3),
+    align4Pions(LigneGauche1, LigneGauche2, LigneGauche3, LigneDroite1, LigneDroite2, LigneDroite3, LigneScore4),
+    align4Pions(ColonneGauche1, ColonneGauche2, ColonneGauche3, ColonneDroite1, ColonneDroite2, ColonneDroite3, ColonneScore4),
+    align4Pions(Diag1Gauche1, Diag1Gauche2, Diag1Gauche3, Diag1Droite1, Diag1Droite2, Diag1Droite3, Diag1Score4),
+    align4Pions(Diag2Gauche1, Diag2Gauche2, Diag2Gauche3, Diag2Droite1, Diag2Droite2, Diag2Droite3, Diag2Score4),
+    findall(S, align3Pions(LigneGauche1, LigneGauche2, LigneGauche3, LigneDroite1, LigneDroite2, LigneDroite3, S),ListLigneScore3),
+    sum(ListLigneScore3, LigneScore3),
+    findall(S, align3Pions(ColonneGauche1, ColonneGauche2, ColonneGauche3, ColonneDroite1, ColonneDroite2, ColonneDroite3, S),ListColonneScore3),
+    sum(ListColonneScore3, ColonneScore3),
+    findall(S, align3Pions(Diag1Gauche1, Diag1Gauche2, Diag1Gauche3, Diag1Droite1, Diag1Droite2, Diag1Droite3, S),ListDiag1Score3),
+    sum(ListDiag1Score3, Diag1Score3),
+    findall(S, align3Pions(Diag2Gauche1, Diag2Gauche2, Diag2Gauche3, Diag2Droite1, Diag2Droite2, Diag2Droite3, S),ListDiag2Score3),
+    sum(ListDiag2Score3, Diag2Score3),
+    findall(S, align2Pions(LigneGauche1, LigneGauche2, LigneGauche3, LigneDroite1, LigneDroite2, LigneDroite3, S),ListLigneScore2),
+    sum(ListLigneScore2, LigneScore2),
+    findall(S, align2Pions(ColonneGauche1, ColonneGauche2, ColonneGauche3, ColonneDroite1, ColonneDroite2, ColonneDroite3, S),ListColonneScore2),
+    sum(ListColonneScore2, ColonneScore2),
+    findall(S, align2Pions(Diag1Gauche1, Diag1Gauche2, Diag1Gauche3, Diag1Droite1, Diag1Droite2, Diag1Droite3, S),ListDiag1Score2),
+    sum(ListDiag1Score2, Diag1Score2),
+    findall(S, align2Pions(Diag2Gauche1, Diag2Gauche2, Diag2Gauche3, Diag2Droite1, Diag2Droite2, Diag2Droite3, S),ListDiag2Score2),
+    sum(ListDiag2Score2, Diag2Score2),
+    Score is LigneScore4 + ColonneScore4 + Diag1Score4 + Diag2Score4 
+            + LigneScore3 + ColonneScore3 + Diag1Score3 + Diag2Score3
+            + LigneScore2 + ColonneScore2 + Diag1Score2 + Diag2Score2.
+
+
+%x,x,x,x%
+align4Pions(Gauche1, Gauche2, Gauche3, Droite1, Droite2, Droite3, Score):-
+    (  
+        1+Droite1+Droite2+Droite3 >= 4, Score is 1000,!;
+        1+Gauche1+Droite1+Droite2 >= 4,Score is 1000,!;
+        1+Gauche1+Gauche2+Droite1 >= 4,Score is 1000,!;
+        1+Gauche1+Gauche2+Gauche3 >= 4,Score is 1000,!);
+    (Score is 0).
+
+%_,x,x,x%
+align3Pions(Gauche1, Gauche2, Gauche3, Droite1, Droite2, _, Score):-
+    (  
+        Gauche1==0, Droite1==1, Droite2==1, Score is 100;
+        Gauche1==1, Gauche2==0, Droite1==1, Score is 100;
+        Gauche1==1, Gauche2==1, Gauche3==0, Score is 100);
+    (Score is 0).
+
+%x,_,x,x%
+align3Pions(Gauche1, Gauche2, Gauche3, Droite1, Droite2, Droite3, Score):-
+    (  
+        Droite1==0, Droite2==1, Droite3==1, Score is 100;
+        Gauche1==0, Gauche2==1, Droite1==1, Score is 100;
+        Gauche1==1, Gauche2==0, Gauche3==1, Score is 100);
+    (Score is 0).    
+
+%x,x,_,x%
+align3Pions(Gauche1, Gauche2, Gauche3, Droite1, Droite2, Droite3, Score):-
+    (  
+        Droite1==1, Droite2==0, Droite3==1, Score is 100;
+        Gauche1==1, Droite1==0, Droite2==1, Score is 100;
+        Gauche1==0, Gauche2==1, Gauche3==1, Score is 100);
+    (Score is 0).
+
+%x,x,x,_%
+align3Pions(Gauche1, Gauche2, Gauche3, Droite1, Droite2, Droite3, Score):-
+    (  
+        Droite1==1, Droite2==1, Droite3==0, Score is 100;
+        Gauche1==1, Droite1==1, Droite2==0, Score is 100;
+        Gauche1==1, Gauche2==1, Droite1==0, Score is 100);
+    (Score is 0).    
+
+%_,_,x,x%
+align2Pions(Gauche1, Gauche2, Gauche3, Droite1, _, _, Score):-
+    (  
+        Gauche1==0, Gauche2==0, Droite1==1, Score is 10;
+        Gauche1==1, Gauche2==0, Gauche3==0, Score is 10);
+    (Score is 0).    
+  
+%_,x,_,x%
+align2Pions(Gauche1, Gauche2, Gauche3, Droite1, Droite2, _, Score):-
+    (  
+        Gauche1==0, Droite1==0, Droite2==1, Score is 10;
+        Gauche1==0, Gauche2==1, Gauche3==0, Score is 10);
+    (Score is 0).    
+
+%_,x,x,_%
+align2Pions(Gauche1, Gauche2, _, Droite1, Droite2, _, Score):-
+    (  
+        Gauche1==0, Droite1==1, Droite2==0, Score is 10;
+        Gauche1==1, Gauche2==0, Droite1==0, Score is 10);
+    (Score is 0).
+ 
+%x,_,_,x%
+align2Pions(Gauche1, Gauche2, Gauche3, Droite1, Droite2, Droite3, Score):-
+    (  
+        Droite1==0, Droite2==0, Droite3==1, Score is 10;
+        Gauche1==0, Gauche2==0, Gauche3==1, Score is 10);
+    (Score is 0).
+
+%x,_,x,_%
+align2Pions(Gauche1, Gauche2, _, Droite1, Droite2, Droite3, Score):-
+    (  
+        Droite1==0, Droite2==1, Droite3==0, Score is 10;
+        Gauche1==0, Gauche2==1, Droite1==0, Score is 10);
+    (Score is 0).  
+   
+%x,x,_,_%
+align2Pions(Gauche1, _, _, Droite1, Droite2, Droite3, Score):-
+    (  
+        Droite1==1, Droite2==0, Droite3==0, Score is 10;
+        Gauche1==1, Droite1==0, Droite2==0, Score is 10);
+    (Score is 0).  
+  
+evaluerLigne(X,Y,Joueur,Gauche1,Gauche2,Gauche3,Droite1, Droite2, Droite3) :-
+    verifierGaucheLigne(X,Y,Joueur,Gauche1,Gauche2,Gauche3),
+    verifierDroiteLigne(X,Y,Joueur,Droite1,Droite2,Droite3).
+
+verifierDroiteLigne(X,Y,Joueur,Droite1,Droite2,Droite3):-
+    incr(X,X1),
+    incr(X1,X2),
+    incr(X2,X3), 
+    (X1 =< 7, caseTest(X1,Y,Joueur), Droite1 is 1,!;
+     X1 =< 7, not(caseTest(X1,Y,_)), Droite1 is 0,!;
+     Droite1 is -1),
+    (X2 =< 7, caseTest(X2,Y,Joueur), Droite2 is 1,!;
+     X2 =< 7, not(caseTest(X2,Y,_)), Droite2 is 0,!;
+     Droite2 is -1),
+    (X3 =< 7, caseTest(X3,Y,Joueur), Droite3 is 1,!;
+     X3 =< 7, not(caseTest(X3,Y,_)), Droite3 is 0,!;
+     Droite3 is -1).
+
+verifierGaucheLigne(X,Y,Joueur,Gauche1,Gauche2,Gauche3):-
+    decr(X,X1),
+    decr(X1,X2),
+    decr(X2,X3), 
+    (X1 >=1 , caseTest(X1,Y,Joueur), Gauche1 is 1,!;
+     X1 >=1 , not(caseTest(X1,Y,_)), Gauche1 is 0,!;
+     Gauche1 is -1),
+    (X2 >=1 , caseTest(X2,Y,Joueur), Gauche2 is 1,!;
+     X2 >=1 , not(caseTest(X2,Y,_)), Gauche2 is 0,!;
+     Gauche2 is -1),
+    (X3 >=1 , caseTest(X3,Y,Joueur), Gauche3 is 1,!;
+     X3 >=1 , not(caseTest(X3,Y,_)), Gauche3 is 0,!;
+     Gauche3 is -1).
+
+evaluerColonne(X,Y,Joueur,Gauche1,Gauche2,Gauche3,Droite1, Droite2, Droite3) :-
+    verifierGaucheColonne(X,Y,Joueur,Gauche1,Gauche2,Gauche3),
+    verifierDroiteColonne(X,Y,Joueur,Droite1,Droite2,Droite3).
+
+verifierDroiteColonne(X,Y,Joueur,Droite1,Droite2,Droite3):-
+    incr(Y,Y1),
+    incr(Y1,Y2),
+    incr(Y2,Y3), 
+    (Y1 =< 6, caseTest(X,Y1,Joueur), Droite1 is 1,!;
+     Y1 =< 6, not(caseTest(X,Y1,_)), Droite1 is 0,!;
+     Droite1 is -1),
+    (Y2 =< 6, caseTest(X,Y2,Joueur), Droite2 is 1,!;
+     Y2 =< 6, not(caseTest(X,Y2,_)), Droite2 is 0,!;
+     Droite2 is -1),
+    (Y3 =< 6, caseTest(X,Y3,Joueur), Droite3 is 1,!;
+     Y3 =< 6, not(caseTest(X,Y3,_)), Droite3 is 0,!;
+     Droite3 is -1).
+
+verifierGaucheColonne(X,Y,Joueur,Gauche1,Gauche2,Gauche3):-
+    decr(Y,Y1),
+    decr(Y1,Y2),
+    decr(Y2,Y3), 
+    (Y1 >=1 , caseTest(X,Y1,Joueur), Gauche1 is 1,!;
+     Y1 >=1 , not(caseTest(X,Y1,_)), Gauche1 is 0,!;
+     Gauche1 is -1),
+    (Y2 >=1 , caseTest(X,Y2,Joueur), Gauche2 is 1,!;
+     Y2 >=1 , not(caseTest(X,Y2,_)), Gauche2 is 0,!;
+     Gauche2 is -1),
+    (Y3 >=1 , caseTest(X,Y3,Joueur), Gauche3 is 1,!;
+     Y3 >=1 , not(caseTest(X,Y3,_)), Gauche3 is 0,!;
+     Gauche3 is -1).
+
+evaluerDiag1(X,Y,Joueur,Gauche1,Gauche2,Gauche3,Droite1, Droite2, Droite3) :-
+    verifierGaucheColonne(X,Y,Joueur,Gauche1,Gauche2,Gauche3),
+    verifierDroiteColonne(X,Y,Joueur,Droite1,Droite2,Droite3).
+
+verifierDroiteDiag1(X,Y,Joueur,Droite1,Droite2,Droite3):-
+    incr(Y,Y1),
+    incr(Y1,Y2),
+    incr(Y2,Y3), 
+    incr(X,X1),
+    incr(X1,X2),
+    incr(X2,X3), 
+    (Y1 =< 6, X1 =< 7, caseTest(X1,Y1,Joueur), Droite1 is 1,!;
+     Y1 =< 6, X1 =< 7, not(caseTest(X1,Y1,_)), Droite1 is 0,!;
+     Droite1 is -1),
+    (Y2 =< 6, X2 =< 7, caseTest(X2,Y2,Joueur), Droite2 is 1,!;
+     Y2 =< 6, X2 =< 7, not(caseTest(X2,Y2,_)), Droite2 is 0,!;
+     Droite2 is -1),
+    (Y3 =< 6, X3 <= 7, caseTest(X3,Y3,Joueur), Droite3 is 1,!;
+     Y3 =< 6, X3 <= 7, not(caseTest(X3,Y3,_)), Droite3 is 0,!;
+     Droite3 is -1).
+
+verifierGaucheDiag1(X,Y,Joueur,Gauche1,Gauche2,Gauche3):-
+    decr(Y,Y1),
+    decr(Y1,Y2),
+    decr(Y2,Y3), 
+    decr(X,X1),
+    decr(X1,X2),
+    decr(X2,X3), 
+    (Y1 >=1 ,X1 >= 1, caseTest(X1,Y1,Joueur), Gauche1 is 1,!;
+     Y1 >=1 ,X1 >= 1, not(caseTest(X1,Y1,_)), Gauche1 is 0,!;
+     Gauche1 is -1),
+    (Y2 >=1 ,X2 >= 1, caseTest(X2,Y2,Joueur), Gauche2 is 1,!;
+     Y2 >=1 ,X2 >= 1, not(caseTest(X2,Y2,_)), Gauche2 is 0,!;
+     Gauche2 is -1),
+    (Y3 >=1 ,X3 >= 1, caseTest(X3,Y3,Joueur), Gauche3 is 1,!;
+     Y3 >=1 ,X3 >= 1, not(caseTest(X3,Y3,_)), Gauche3 is 0,!;
+     Gauche3 is -1).
+
+evaluerDiag2(X,Y,Joueur,Gauche1,Gauche2,Gauche3,Droite1, Droite2, Droite3) :-
+    verifierGaucheColonne(X,Y,Joueur,Gauche1,Gauche2,Gauche3),
+    verifierDroiteColonne(X,Y,Joueur,Droite1,Droite2,Droite3).
+
+verifierDroiteDiag2(X,Y,Joueur,Droite1,Droite2,Droite3):-
+    decr(Y,Y1),
+    decr(Y1,Y2),
+    decr(Y2,Y3), 
+    incr(X,X1),
+    incr(X1,X2),
+    incr(X2,X3), 
+    (Y1 >=1 6, X1 =< 7, caseTest(X1,Y1,Joueur), Droite1 is 1,!;
+     Y1 >=1 6, X1 =< 7, not(caseTest(X1,Y1,_)), Droite1 is 0,!;
+     Droite1 is -1),
+    (Y2 >=1 6, X2 =< 7, caseTest(X2,Y2,Joueur), Droite2 is 1,!;
+     Y2 >=1 6, X2 =< 7, not(caseTest(X2,Y2,_)), Droite2 is 0,!;
+     Droite2 is -1),
+    (Y3 >=1 6, X3 <= 7, caseTest(X3,Y3,Joueur), Droite3 is 1,!;
+     Y3 >=1 6, X3 <= 7, not(caseTest(X3,Y3,_)), Droite3 is 0,!;
+     Droite3 is -1).
+
+verifierGaucheDiag2(X,Y,Joueur,Gauche1,Gauche2,Gauche3):-
+    incr(Y,Y1),
+    incr(Y1,Y2),
+    incr(Y2,Y3), 
+    decr(X,X1),
+    decr(X1,X2),
+    decr(X2,X3), 
+    (Y1 =< 6, X1 >= 1, caseTest(X1,Y1,Joueur), Droite1 is 1,!;
+     Y1 =< 6, X1 >= 1, not(caseTest(X1,Y1,_)), Droite1 is 0,!;
+     Droite1 is -1),
+    (Y2 =< 6, X2 >= 1, caseTest(X2,Y2,Joueur), Droite2 is 1,!;
+     Y2 =< 6, X2 >= 1, not(caseTest(X2,Y2,_)), Droite2 is 0,!;
+     Droite2 is -1),
+    (Y3 =< 6, X3 >= 1, caseTest(X3,Y3,Joueur), Droite3 is 1,!;
+     Y3 =< 6, X3 >= 1, not(caseTest(X3,Y3,_)), Droite3 is 0,!;
+     Droite3 is -1).
+
 
 %%% Détection de la victoire des cases de test.
 

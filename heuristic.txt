@@ -4,3 +4,11 @@
 -position
 -victoire
 -danger de l'autre
+
+
+statégies gagnantes :
+controler le centre 
+bloquer l'adversaire 
+profiter des erreurs
+être offensiver 
+faire attention au trou vide 

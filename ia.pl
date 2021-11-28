@@ -5,11 +5,12 @@
 
 :- module(ia, [iaAleatoire/1
 			  ,iaMinimax/7
-			  ,iaAlphaBeta/3
+			  ,iaAlphaBeta/4
 			  ,poidsPuissance3/1
 			  ,poidsPosition/1
 			  ,poidsDensite/1
-			  ,poidsAdjacence/1]
+			  ,poidsAdjacence/1
+			  ,poidsDefensif/1]
 ).
 
 %%%%%%%%%%%%%%%%
@@ -25,10 +26,14 @@
 %% Prédicats dynamiques %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%OLD
 :- dynamic poidsPuissance3/1.
 :- dynamic poidsPosition/1.
 :- dynamic poidsDensite/1.
 :- dynamic poidsAdjacence/1.
+
+%NEW
+:- dynamic poidsDefensif/1.
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Prédicats publics %%
@@ -49,7 +54,8 @@ iaMinimax(JoueurCourant,Coup,Profondeur,PoidsPosition,PoidsPuissance3,PoidsDensi
 	assert(poidsAdjacence(PoidsAdjacence)),
 	parcoursArbre(JoueurCourant,Profondeur,Coup,_).
 
-iaAlphaBeta(JoueurCourant,Coup,Profondeur) :-
+iaAlphaBeta(JoueurCourant,Coup,Profondeur,PoidsDefensif) :-
+	assert(poidsDefensif(PoidsDefensif)),
 	Alpha is -99999,
 	Beta is 99999,
 	alphaBeta(Profondeur, JoueurCourant, Alpha, Beta, Coup, _, JoueurCourant).
