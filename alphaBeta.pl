@@ -82,9 +82,15 @@ evaluate(CouleurJoueur, Value):-
 
 eval(CouleurJoueur, Score):- 
     %%%%%% Call heuristics %%%%%%
+<<<<<<< HEAD
     %poidsDefensif(PoidsDefensif),
     %defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
     forceColumnMove(CouleurJoueur, ScoreVictoire),
+=======
+    poidsDefensif(PoidsDefensif),
+    defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
+    %%forceColumnMove(CouleurJoueur, ScoreVictoire),
+>>>>>>> f418a2724073147cf73813e51f088cb48316f71b
     random_between(-4, 4, Perturbation),
     Score is ScoreDefensif + Perturbation.
 
