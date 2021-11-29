@@ -2,14 +2,16 @@
 % Deux "moteurs" d'IA :
 % - "Aléatoire" jouant aléatoirement ;
 % - "Minimax", implémentation de minimax assez paramétrable.
-
-:- module(ia, [iaAleatoire/1
-			  ,iaMinimax/7
-			  ,poidsPuissance3/1
-			  ,poidsPosition/1
-			  ,poidsDensite/1
-			  ,poidsAdjacence/1]
-).
+% - "Minimax - Candidat", implémentation de minimax en test.
+:- module(ia,
+          [ iaAleatoire/1,
+            iaMinimax/7,
+            iaMinimaxCandidat/7,
+            poidsPuissance3/1,
+            poidsPosition/1,
+            poidsDensite/1,
+            poidsAdjacence/1
+          ]).
 
 %%%%%%%%%%%%%%%%
 %% Inclusions %%
@@ -46,3 +48,10 @@ iaMinimax(JoueurCourant,Coup,Profondeur,PoidsPosition,PoidsPuissance3,PoidsDensi
 	assert(poidsDensite(PoidsDensite)),
 	assert(poidsAdjacence(PoidsAdjacence)),
 	parcoursArbre(JoueurCourant,Profondeur,Coup,_).
+
+iaMinimaxCandidat(JoueurCourant, Coup, Profondeur, PoidsPosition, PoidsPuissance3, PoidsDensite, PoidsAdjacence) :-
+    assert(poidsPosition(PoidsPosition)),
+    assert(poidsPuissance3(PoidsPuissance3)),
+    assert(poidsDensite(PoidsDensite)),
+    assert(poidsAdjacence(PoidsAdjacence)),
+    parcoursArbre(JoueurCourant, Profondeur, Coup, _).

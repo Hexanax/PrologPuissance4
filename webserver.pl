@@ -179,3 +179,5 @@ obtenirCoup(CouleurJCourant,7,Coup) :-
     iaMinimax(CouleurJCourant,Coup,5,1,1,0,0).
 obtenirCoup(CouleurJCourant,8,Coup) :-
     iaMinimax(CouleurJCourant,Coup,5,1,1,0,0).
+obtenirCoup(CouleurJCourant, 9, Coup) :-
+    iaMinimaxCandidat(CouleurJCourant, Coup, 3, 1, 0, 0, 0).
