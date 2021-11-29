@@ -86,13 +86,19 @@ eval(CouleurJoueur, Score):-
     poidsDefensif(PoidsDefensif),
     poidsCaseOffensif(PoidsOffensif),
     poidsPiegeSept(PoidsPiege),
+    poidsOpening(PoidsOpening),
     defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
     offensiveIA(CouleurJoueur, ScoreOffensif, PoidsOffensif),
     positionIA(CouleurJoueur, ScorePosition, PoidsCaseTableau),
-    piege7IA(CouleurJoueur, ScorePiege, PoidsPiege)
+    piege7IA(CouleurJoueur, ScorePiege, PoidsPiege),
+    opening(CouleurJoueur, ScoreOpening, PoidsOpening),
     forceColumnMove(CouleurJoueur, ScoreVictoire),
     random_between(-4, 4, Perturbation),
-    Score is ScoreDefensif + ScorePosition + ScoreOffensif + ScorePiege
+    Score is ScoreDefensif * PoidsDefensif
+            + ScorePosition * PoidsCaseTableau
+            + ScoreOffensif * PoidsOffensif
+            + ScorePiege * PoidsPiege
+            + ScoreOpening * PoidsOpening
             + Perturbation.
 
 %Forces the AI to play on the 2nd column because it gives a huge score to do so
@@ -557,3 +563,46 @@ piege7BasPositionnement(5,100).
 piege7BasPositionnement(4,50).
 piege7BasPositionnement(_,0).
 
+
+/* Evaluation de l'opening 
+
+
+
+*/
+
+opening(CouleurJoueur, ScoreOpening, PoidsOpening) :- 
+    PoidsOpening > 0,
+    couleurAdverse(CouleurJoueur, JoueurAdverse),
+    findall(Nb, compterCaseOccuper(CouleurJoueur,Nb), SommeJ), 
+    findall(NbAdverse, compterCaseOccuper(CouleurJoueur,NbAdverse), SommeA), 
+    sum(SommeA, SommeAdverse),
+    sum(SommeJ, SommeJoueur),
+    evaluerOpening(SommeJoueur, CouleurJoueur, SommeAdverse, JoueurAdverse, S),
+    ScoreOpening is S.
+opening(_, 0, _).    
+
+evaluerOpening(1, CouleurJoueur, 0, _, Score):- 
+    caseTest(X,_,CouleurJoueur),
+    (X == 1, Score is -1000, !;
+     X == 2, Score is -1000, !;
+     X == 3, Score is 0, !;
+     X == 4, Score is 1000, !;
+     X == 5, Score is 0, !;
+     X == 6, Score is -1000, !;
+     X == 7, Score is -1000, !;   
+        Score is 0).
+evaluerOpening(1, CouleurJoueur, 1, _, Score):- 
+    caseTest(X,_,CouleurJoueur),
+    (X == 1, Score is -1000, !;
+     X == 2, Score is -1000, !;
+     X == 3, Score is 0, !;
+     X == 4, Score is 1000, !;
+     X == 5, Score is 0, !;
+     X == 6, Score is -1000, !;
+     X == 7, Score is -1000, !;   
+        Score is 0). 
+evaluerOpening(_, _, _, _,0).
+
+compterCaseOccuper(CouleurJoueur, Somme):-
+    caseTest(X,Y,CouleurJoueur),
+    Somme is 1.
