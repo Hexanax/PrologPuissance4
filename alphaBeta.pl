@@ -82,17 +82,14 @@ evaluate(CouleurJoueur, Value):-
 
 eval(CouleurJoueur, Score):- 
     %%%%%% Call heuristics %%%%%%
-<<<<<<< HEAD
-    %poidsDefensif(PoidsDefensif),
-    %defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
-    forceColumnMove(CouleurJoueur, ScoreVictoire),
-=======
+    poidsCaseTableau(PoidsCaseTableau),
     poidsDefensif(PoidsDefensif),
     defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
-    %%forceColumnMove(CouleurJoueur, ScoreVictoire),
->>>>>>> f418a2724073147cf73813e51f088cb48316f71b
+    positionIA(CouleurJoueur, ScorePosition, PoidsCaseTableau),
+    forceColumnMove(CouleurJoueur, ScoreVictoire),
     random_between(-4, 4, Perturbation),
-    Score is ScoreDefensif + Perturbation.
+    Score is ScoreDefensif + ScorePosition
+            + Perturbation.
 
 %Forces the AI to play on the 2nd column because it gives a huge score to do so
 forceColumnMove(CouleurJoueur, Score):-
