@@ -82,11 +82,36 @@ evaluate(CouleurJoueur, Value):-
 
 eval(CouleurJoueur, Score):- 
     %%%%%% Call heuristics %%%%%%
+<<<<<<< HEAD
+    %poidsDefensif(PoidsDefensif),
+    %defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
+    forceColumnMove(CouleurJoueur, ScoreVictoire),
+=======
     poidsDefensif(PoidsDefensif),
     defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
     %%forceColumnMove(CouleurJoueur, ScoreVictoire),
+>>>>>>> f418a2724073147cf73813e51f088cb48316f71b
     random_between(-4, 4, Perturbation),
     Score is ScoreDefensif + Perturbation.
+
+%Forces the AI to play on the 2nd column because it gives a huge score to do so
+forceColumnMove(CouleurJoueur, Score):-
+    (caseTest(3, 6, _);
+    caseTest(3, 5, _);
+    caseTest(3, 4, _);
+    caseTest(3, 3, _);
+    caseTest(3, 2, _);
+    caseTest(3, 1, _)),
+    Score is 1000.
+
+%Always a valid score of 0 if not true
+forceColumnMove(_, 0).
+
+dummyVictoire(CouleurJoueur, Score):-
+    (caseTest(3, 1, _)),
+    Score is 1000.
+
+dummyVictoire(_, 0).
 
 %Forces the AI to play on the 2nd column because it gives a huge score to do so
 forceColumnMove(CouleurJoueur, Score):-
@@ -348,8 +373,8 @@ verifierDroiteDiag1(X,Y,Joueur,Droite1,Droite2,Droite3):-
     (Y2 =< 6, X2 =< 7, caseTest(X2,Y2,Joueur), Droite2 is 1,!;
      Y2 =< 6, X2 =< 7, not(caseTest(X2,Y2,_)), Droite2 is 0,!;
      Droite2 is -1),
-    (Y3 =< 6, X3 <= 7, caseTest(X3,Y3,Joueur), Droite3 is 1,!;
-     Y3 =< 6, X3 <= 7, not(caseTest(X3,Y3,_)), Droite3 is 0,!;
+    (Y3 =< 6, X3 =< 7, caseTest(X3,Y3,Joueur), Droite3 is 1,!;
+     Y3 =< 6, X3 =< 7, not(caseTest(X3,Y3,_)), Droite3 is 0,!;
      Droite3 is -1).
 
 verifierGaucheDiag1(X,Y,Joueur,Gauche1,Gauche2,Gauche3):-
@@ -386,8 +411,8 @@ verifierDroiteDiag2(X,Y,Joueur,Droite1,Droite2,Droite3):-
     (Y2 >=1 6, X2 =< 7, caseTest(X2,Y2,Joueur), Droite2 is 1,!;
      Y2 >=1 6, X2 =< 7, not(caseTest(X2,Y2,_)), Droite2 is 0,!;
      Droite2 is -1),
-    (Y3 >=1 6, X3 <= 7, caseTest(X3,Y3,Joueur), Droite3 is 1,!;
-     Y3 >=1 6, X3 <= 7, not(caseTest(X3,Y3,_)), Droite3 is 0,!;
+    (Y3 >=1 6, X3 =< 7, caseTest(X3,Y3,Joueur), Droite3 is 1,!;
+     Y3 >=1 6, X3 =< 7, not(caseTest(X3,Y3,_)), Droite3 is 0,!;
      Droite3 is -1).
 
 verifierGaucheDiag2(X,Y,Joueur,Gauche1,Gauche2,Gauche3):-
