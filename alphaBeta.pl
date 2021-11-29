@@ -4,7 +4,7 @@
 :- module(alphaBeta, [alphaBeta/7]).
 
 %%%%%%%%%%%%%%%%
-%% Inclusions %%
+%% Inclusions %% https://github.com/PascalPons/connect4/blob/part4/solver.cpp
 %%%%%%%%%%%%%%%%
 
 :- dynamic caseTest/3.
@@ -17,45 +17,47 @@ couleurAdverse(rouge, jaune).
 
 alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value,Maximizer):- 
     evaluate(CouleurJoueur, Value),!.
-
 alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value, Maximizer):- 
     Profondeur > 0,
     findall(X, (between(1,7,X),coupValide(X)), Moves),
-    Profondeur1 is Profondeur -1,
-    evaluate_and_choose(Moves, CouleurJoueur, Profondeur1, Alpha,Beta,nil,(Move,Value),Maximizer).
+    taille(Moves,Size),
+    Size > 0,
+    Profondeur1 is Profondeur - 1,
+    evaluate_and_choose(Moves, CouleurJoueur,Profondeur1,Alpha,Beta,nil, (Move,Value),Maximizer).
+alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value, Maximizer):- 
+    Profondeur > 0,
+    findall(X, (between(1,7,X),coupValide(X)), Moves),
+    taille(Moves,0),
+    alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value,Maximizer).
+taille([],0).
+
+taille([H|T],L) :-
+	taille(T,L1),
+	L is 1 + L1.
 
 evaluate_and_choose([Move|Moves],CouleurJoueur,Profondeur,Alpha,Beta,Record,BestMove,Maximizer) :- 
 	move(Move,CouleurJoueur,CouleurJoueurSuivant,Ligne),
-    alphaBeta(D,CouleurJoueurSuivant,Alpha,Beta,MoveX,Value, Maximizer),
+    Alpha1 is -Beta,
+    Beta1 is -Alpha,
+    alphaBeta(Profondeur,CouleurJoueurSuivant,Alpha1,Beta1,MoveX,Value, Maximizer),
     undoMove(Move, Ligne, CouleurJoueur),
-    cutoff(Move,Value,Profondeur,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove, Maximizer).
+    Value1 is Value,  % ici je sais pas si il faut faire fois -1 ou pas je te laisse test
+    cutoff(Move,Value1,Profondeur,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove, Maximizer).
 
 evaluate_and_choose([],CouleurJoueur,Profondeur,Alpha,Beta,Move,(Move,Alpha),Maximizer).
 
 cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,(Move,Value),Maximizer) :- 
-    CouleurJoueur == Maximizer,
-	Value >= Beta, !.
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,(Move,Value),Maximizer) :- 
-    couleurAdverse(CouleurJoueur,Maximizer),
-	Value =< Alpha, !.
+    Value >= Beta.
 
 cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
-    CouleurJoueur == Maximizer,
+    Alpha < Value,
+	Value < Beta,
+    evaluate_and_choose(Moves,CouleurJoueur,D,Value,Beta,Move,BestMove, Maximizer).
+
+cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
     Value =< Alpha,
-	evaluate_and_choose(Moves,CouleurJoueur,D,Alpha,Beta,Record,BestMove, Maximizer).
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
-    CouleurJoueur == Maximizer,
-    Value > Alpha,
-	evaluate_and_choose(Moves,CouleurJoueur,D,Value,Beta,Move,BestMove, Maximizer).
-
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
-    couleurAdverse(CouleurJoueur,Maximizer),
-    Value >= Beta,
-	evaluate_and_choose(Moves,CouleurJoueur,D,Alpha,Beta,Record,BestMove,Maximizer).
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
-    couleurAdverse(CouleurJoueur,Maximizer),
-    Value < Beta,
-	evaluate_and_choose(Moves,CouleurJoueur,D,Alpha,Value,Move,BestMove,Maximizer).
+    evaluate_and_choose(Moves,CouleurJoueur,D,Value,Beta,Record,BestMove, Maximizer).
+    
     
 move(Move, CouleurJoueur, CouleurJoueurSuivant,Ligne):-
     CouleurJoueur == jaune,
@@ -83,7 +85,7 @@ eval(CouleurJoueur, Score):-
     poidsDefensif(PoidsDefensif),
     defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
     %%forceColumnMove(CouleurJoueur, ScoreVictoire),
-    random_between(-10, 10, Perturbation),
+    random_between(-4, 4, Perturbation),
     Score is ScoreDefensif + Perturbation.
 
 %Forces the AI to play on the 2nd column because it gives a huge score to do so
