@@ -84,11 +84,13 @@ eval(CouleurJoueur, Score):-
     %%%%%% Call heuristics %%%%%%
     poidsCaseTableau(PoidsCaseTableau),
     poidsDefensif(PoidsDefensif),
+    poidsCaseOffensif(PoidsOffensif),
     defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
+    offensiveIA(CouleurJoueur, ScoreOffensif, PoidsOffensif),
     positionIA(CouleurJoueur, ScorePosition, PoidsCaseTableau),
     forceColumnMove(CouleurJoueur, ScoreVictoire),
     random_between(-4, 4, Perturbation),
-    Score is ScoreDefensif + ScorePosition
+    Score is ScoreDefensif + ScorePosition + ScoreOffensif
             + Perturbation.
 
 %Forces the AI to play on the 2nd column because it gives a huge score to do so
@@ -170,11 +172,23 @@ defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif):-
     ScoreDefensif is ScoreDefensifTot.
 defensiveIA(_, 0, _).
 
+offensiveIA(CouleurJoueur, ScoreOffensif, PoidsOffensif):- 
+    PoidsOffensif > 0,
+    findall(S, evalDangerJoueur(CouleurJoueur, S),Scores),
+    sum(Scores, ScoreOffensiffTot),
+    ScoreOffensif is ScoreOffensiffTot.
+offensiveIA(_, 0, _).
+
 evalDangerAdverse(CouleurJoueur, Score) :-
     couleurAdverse(CouleurJoueur, JoueurAdverse),
     caseTest(X,Y,JoueurAdverse),
     calculerScoreAlignement(X, Y, JoueurAdverse, S),
     Score is S * -1.
+
+evalDangerJoueur(CouleurJoueur, Score) :-
+    caseTest(X,Y,CouleurJoueur),
+    calculerScoreAlignement(X, Y, JoueurAdverse, S),
+    Score is S.
 
 calculerScoreAlignement(X,Y, CouleurJoueur, Score ):-
     evaluerLigne(X,Y,CouleurJoueur,LigneGauche1, LigneGauche2, LigneGauche3, LigneDroite1, LigneDroite2, LigneDroite3),
