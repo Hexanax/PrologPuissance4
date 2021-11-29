@@ -145,7 +145,7 @@ defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif):-
     PoidsDefensif > 0,
     findall(S, evalDangerAdverse(CouleurJoueur, S),Scores),
     sum(Scores, ScoreDefensifTot),
-    ScoreDefensif is ScoreDefensifTot,!.
+    ScoreDefensif is ScoreDefensifTot.
 defensiveIA(_, 0, _).
 
 evalDangerAdverse(CouleurJoueur, Score) :-
@@ -406,6 +406,88 @@ verifierGaucheDiag2(X,Y,Joueur,Gauche1,Gauche2,Gauche3):-
     (Y3 =< 6, X3 >= 1, caseTest(X3,Y3,Joueur), Droite3 is 1,!;
      Y3 =< 6, X3 >= 1, not(caseTest(X3,Y3,_)), Droite3 is 0,!;
      Droite3 is -1).
+
+
+%%%%% Heuristic d'état du plateau %%%%%%%%%
+/*
+
+
+3	4	5	7	5	4	3
+4	6	8	10	8	6	4
+5	8	11	13	11	8	5
+5	8	11	13	11	8	5
+4	6	8	10	8	6	4
+3	4	5	7	5	4	3
+
+
+*/
+
+positionIA(CouleurJoueur, ScorePosition, PoidsCaseTableau):- 
+    PoidsCaseTableau > 0,
+    findall(S, calculerScorePlateau(CouleurJoueur, S),Scores),
+    sum(Scores, ScoreDefensifTotJoueur),
+    couleurAdverse(CouleurJoueur, JoueurAdverse),
+    findall(S, calculerScorePlateau(JoueurAdverse,S), ScoresAdverse), 
+    sum(ScoresAdverse, ScoreDefensifTotAdverse),
+    ScorePosition is ScoreDefensifTotJoueur - ScoreDefensifTotAdverse.
+positionIA(_, 0, _).
+
+
+calculerScorePlateau(CouleurJoueur, Score):-
+    caseTest(X,Y, CouleurJoueur),
+    valeurCasePlateau(X,Y,S),
+    Score is S.
+
+valeurCasePlateau(1,1,3).
+valeurCasePlateau(2,1,4). 
+valeurCasePlateau(3,1,5). 
+valeurCasePlateau(4,1,7). 
+valeurCasePlateau(5,1,5). 
+valeurCasePlateau(6,1,4). 
+valeurCasePlateau(7,1,3). 
+
+valeurCasePlateau(1,2,4).
+valeurCasePlateau(2,2,6). 
+valeurCasePlateau(3,2,8). 
+valeurCasePlateau(4,2,10). 
+valeurCasePlateau(5,2,8). 
+valeurCasePlateau(6,2,6). 
+valeurCasePlateau(7,2,4). 
+
+valeurCasePlateau(1,3,5).
+valeurCasePlateau(2,3,8). 
+valeurCasePlateau(3,3,11). 
+valeurCasePlateau(4,3,13). 
+valeurCasePlateau(5,3,11). 
+valeurCasePlateau(6,3,8). 
+valeurCasePlateau(7,3,5). 
+
+valeurCasePlateau(1,4,5).
+valeurCasePlateau(2,4,8). 
+valeurCasePlateau(3,4,11). 
+valeurCasePlateau(4,4,13). 
+valeurCasePlateau(5,4,11). 
+valeurCasePlateau(6,4,8). 
+valeurCasePlateau(7,4,5). 
+
+valeurCasePlateau(1,5,4).
+valeurCasePlateau(2,5,6). 
+valeurCasePlateau(3,5,8). 
+valeurCasePlateau(4,5,10). 
+valeurCasePlateau(5,5,8). 
+valeurCasePlateau(6,5,6). 
+valeurCasePlateau(7,5,4). 
+
+valeurCasePlateau(1,6,3).
+valeurCasePlateau(2,6,4). 
+valeurCasePlateau(3,6,5). 
+valeurCasePlateau(4,6,7). 
+valeurCasePlateau(5,6,5). 
+valeurCasePlateau(6,6,4). 
+valeurCasePlateau(7,6,3). 
+
+
+
 
 
 %%% Détection de la victoire des cases de test.
