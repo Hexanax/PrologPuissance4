@@ -16,7 +16,8 @@ couleurAdverse(jaune, rouge).
 couleurAdverse(rouge, jaune).
 
 alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value,Maximizer):- 
-    evaluate(CouleurJoueur, Value),!.
+    evaluate(CouleurJoueur, Value, Move), !.
+
 alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value, Maximizer):- 
     Profondeur > 0,
     findall(X, (between(1,7,X),coupValide(X)), Moves),
@@ -29,6 +30,7 @@ alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value, Maximizer):-
     findall(X, (between(1,7,X),coupValide(X)), Moves),
     taille(Moves,0),
     alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value,Maximizer).
+
 taille([],0).
 
 taille([H|T],L) :-
@@ -41,7 +43,7 @@ evaluate_and_choose([Move|Moves],CouleurJoueur,Profondeur,Alpha,Beta,Record,Best
     Beta1 is -Alpha,
     alphaBeta(Profondeur,CouleurJoueurSuivant,Alpha1,Beta1,MoveX,Value, Maximizer),
     undoMove(Move, Ligne, CouleurJoueur),
-    Value1 is Value,  % ici je sais pas si il faut faire fois -1 ou pas je te laisse test
+    Value1 is -Value,  % ici je sais pas si il faut faire fois -1 ou pas je te laisse test
     cutoff(Move,Value1,Profondeur,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove, Maximizer).
 
 evaluate_and_choose([],CouleurJoueur,Profondeur,Alpha,Beta,Move,(Move,Alpha),Maximizer).
@@ -76,11 +78,18 @@ move(Move, CouleurJoueur, CouleurJoueurSuivant, Ligne):-
 undoMove(Move, Ligne, CouleurJoueur):-
     retract(caseTest(Move, Ligne, CouleurJoueur)).
 
-evaluate(CouleurJoueur, Value):- 
-    eval(CouleurJoueur, Score),
+evaluate(CouleurJoueur, Value, Move):- 
+    eval(CouleurJoueur, Score, Move),
     Value is Score.
 
-eval(CouleurJoueur, Score):- 
+poidsCaseTableau(1).
+poidsDefensif(1).
+poidsCaseOffensif(1).
+poidsPiegeSept(1).
+poidsOpening(1).
+
+%Move is the X position to be played
+eval(CouleurJoueur, Score, Move):- 
     %%%%%% Call heuristics %%%%%%
     poidsCaseTableau(PoidsCaseTableau),
     poidsDefensif(PoidsDefensif),
@@ -93,13 +102,22 @@ eval(CouleurJoueur, Score):-
     piege7IA(CouleurJoueur, ScorePiege, PoidsPiege),
     opening(CouleurJoueur, ScoreOpening, PoidsOpening),
     forceColumnMove(CouleurJoueur, ScoreVictoire),
-    random_between(-4, 4, Perturbation),
+    random_between(-1, 1, Perturbation),
     Score is ScoreDefensif * PoidsDefensif
             + ScorePosition * PoidsCaseTableau
             + ScoreOffensif * PoidsOffensif
-            + ScorePiege * PoidsPiege
-            + ScoreOpening * PoidsOpening
-            + Perturbation.
+            %+ ScorePiege * PoidsPiege
+            %+ ScoreOpening * PoidsOpening
+            + Perturbation,
+    writefacts(Move, Score).
+
+writefacts(X, Score):-
+    open('evals.txt',append,Out),
+    write(Out, X),
+    write(Out, '   '),
+    write(Out, Score),
+    write(Out, '\n'),
+    close(Out).
 
 %Forces the AI to play on the 2nd column because it gives a huge score to do so
 forceColumnMove(CouleurJoueur, Score):-
