@@ -40,6 +40,11 @@ typeJoueur(6,'IA Minimax 4 - eval Position+Puissance3').
 typeJoueur(7,'IA Minimax 5 - eval Position').
 typeJoueur(8,'IA Minimax 5 - eval Position+Puissance3').
 typeJoueur(9,'IA AlphaBeta 3 - aléatoire').
+typeJoueur(10,'IA AlphaBeta 3 - Def').
+typeJoueur(11,'IA AlphaBeta 3 - Position').
+typeJoueur(12,'IA AlphaBeta 3 - Offensif').
+typeJoueur(13,'IA AlphaBeta 3 - 7').
+typeJoueur(14,'IA AlphaBeta 3 - Opening').
 
 changerJoueur :-
 	joueurCourant(rouge,TypeJoueurR),

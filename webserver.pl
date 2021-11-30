@@ -180,4 +180,14 @@ obtenirCoup(CouleurJCourant,7,Coup) :-
 obtenirCoup(CouleurJCourant,8,Coup) :-
     iaMinimax(CouleurJCourant,Coup,5,1,1,0,0).
 obtenirCoup(CouleurJCourant,9,Coup) :-
-    iaAlphaBeta(CouleurJCourant,Coup,3,1,1,1,1,1).
+    iaAlphaBeta(CouleurJCourant,Coup,3,0,0,0,0,0).
+obtenirCoup(CouleurJCourant,10,Coup) :-
+    iaAlphaBeta(CouleurJCourant,Coup,3,5,1,0,0,0).
+obtenirCoup(CouleurJCourant,11,Coup) :-
+    iaAlphaBeta(CouleurJCourant,Coup,3,0,1,0,0,0).
+obtenirCoup(CouleurJCourant,12,Coup) :-
+    iaAlphaBeta(CouleurJCourant,Coup,3,0,0,1,0,0).
+obtenirCoup(CouleurJCourant,13,Coup) :-
+    iaAlphaBeta(CouleurJCourant,Coup,3,0,0,0,1,0).
+obtenirCoup(CouleurJCourant,14,Coup) :-
+    iaAlphaBeta(CouleurJCourant,Coup,3,0,0,0,0,1,0).

@@ -1,7 +1,7 @@
 %%%%%%%%%%%% miniMax.pl %%%%%%%%%%%%
 % Implémentation de minimax avec diverses optimisations propres au Puissance 4.
 
-:- module(alphaBeta, [alphaBeta/7]).
+:- module(alphaBeta, [alpha_beta/7]).
 
 %%%%%%%%%%%%%%%%
 %% Inclusions %% https://github.com/PascalPons/connect4/blob/part4/solver.cpp
@@ -11,132 +11,181 @@
 
 :- use_module(util).
 :- use_module(ia).
+:- use_module(jeu).
 
 couleurAdverse(jaune, rouge).
 couleurAdverse(rouge, jaune).
 
-alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value,Maximizer):- 
-    evaluate(CouleurJoueur, Value, Move), !.
+ponderate(MaxMin, 0, Value, Value1) :- 
+	MaxMin < 0,
+	Value1 is Value * MaxMin,!.
 
-alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value, Maximizer):- 
-    Profondeur > 0,
-    findall(X, (between(1,7,X),coupValide(X)), Moves),
-    taille(Moves,Size),
-    Size > 0,
-    Profondeur1 is Profondeur - 1,
-    evaluate_and_choose(Moves, CouleurJoueur,Profondeur1,Alpha,Beta,nil, (Move,Value),Maximizer).
-alphaBeta(Profondeur, CouleurJoueur, Alpha, Beta, Move, Value, Maximizer):- 
-    Profondeur > 0,
-    findall(X, (between(1,7,X),coupValide(X)), Moves),
-    taille(Moves,0),
-    alphaBeta(0,CouleurJoueur,Alpha,Beta , Move, Value,Maximizer).
+ponderate(MaxMin, 0, Value, Value) :- 
+	MaxMin > 0,!.
 
-taille([],0).
+ponderate(MaxMin, Depth, Value, Value1) :- 
+	Depth > 0,
+	Value1 is -Value.
 
-taille([H|T],L) :-
-	taille(T,L1),
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Alpha beta     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+evaluate_and_choose_ab([Move|Moves], InitPlayer, Depth, Alpha, Beta, Record, BestMove, MaxMin) :-
+	move(Move, MaxMin, InitPlayer),
+	alpha_beta(Depth, InitPlayer, Alpha, Beta, MoveX, Value, MaxMin),
+	undo_move(Move, Color),
+	ponderate(MaxMin, Depth, Value, Value1),
+	cutoff(Move, Value1, Depth, Alpha, Beta , Moves ,InitPlayer, Record, BestMove, MaxMin).
+
+evaluate_and_choose_ab([], InitPlayer, Depth, Alpha, Beta, Move, (Move, Alpha), MaxMin).
+
+
+alpha_beta(0, InitPlayer, Alpha, Beta, Move, Value, MaxMin) :-
+	value(InitPlayer, Value),
+	!.
+
+alpha_beta(Depth, InitPlayer, Alpha, Beta, Move, Value, MaxMin) :-
+	findall(X, (between(1,7,X),coupValide(X)), Moves),
+	size(Moves,L),
+	L > 0,
+	Alpha1 is -Beta,
+	Beta1 is -Alpha,
+	NewDepth is Depth-1,
+	NewMaxMin is -MaxMin,
+	evaluate_and_choose_ab(Moves, InitPlayer, NewDepth, Alpha1, Beta1, nil, (Move, Value), NewMaxMin).
+
+alpha_beta(Depth, InitPlayer, Alpha, Beta, Move, Value, MaxMin) :-
+	findall(X, (between(1,7,X),coupValide(X)), Moves),
+	size(Moves,0),
+	alpha_beta(0, InitPlayer, Alpha, Beta, Move, Value, MaxMin).
+
+size([],0).
+
+size([H|T],L) :-
+	size(T,L1),
 	L is 1 + L1.
 
-evaluate_and_choose([Move|Moves],CouleurJoueur,Profondeur,Alpha,Beta,Record,BestMove,Maximizer) :- 
-	move(Move,CouleurJoueur,CouleurJoueurSuivant,Ligne),
-    Alpha1 is -Beta,
-    Beta1 is -Alpha,
-    alphaBeta(Profondeur,CouleurJoueurSuivant,Alpha1,Beta1,MoveX,Value, Maximizer),
-    undoMove(Move, Ligne, CouleurJoueur),
-    Value1 is -Value,  % ici je sais pas si il faut faire fois -1 ou pas je te laisse test
-    cutoff(Move,Value1,Profondeur,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove, Maximizer).
 
-evaluate_and_choose([],CouleurJoueur,Profondeur,Alpha,Beta,Move,(Move,Alpha),Maximizer).
+cutoff(Move,Value,Depth,Alpha,Beta,Moves, InitPlayer, Move1,(Move1,Value), MaxMin):-
+	Value >= Beta.
 
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,(Move,Value),Maximizer) :- 
-    Value >= Beta.
-
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
-    Alpha < Value,
+cutoff(Move,Value,Depth,Alpha, Beta , Moves, InitPlayer, Move1,BestMove, MaxMin) :- 
+	Alpha < Value,
 	Value < Beta,
-    evaluate_and_choose(Moves,CouleurJoueur,D,Value,Beta,Move,BestMove, Maximizer).
+	evaluate_and_choose_ab(Moves, InitPlayer, Depth, Value, Beta, Move, BestMove, MaxMin).
 
-cutoff(Move,Value,D,Alpha,Beta,Moves,CouleurJoueur,Record,BestMove,Maximizer) :- 
-    Value =< Alpha,
-    evaluate_and_choose(Moves,CouleurJoueur,D,Value,Beta,Record,BestMove, Maximizer).
-    
-    
-move(Move, CouleurJoueur, CouleurJoueurSuivant,Ligne):-
-    CouleurJoueur == jaune,
-    CouleurJoueurSuivant = rouge,
-    insererJeton(Move, Y, CouleurJoueur),
-    Ligne is Y,
-    !.
+cutoff(Move,Value,Depth,Alpha, Beta , Moves, InitPlayer, Move1,BestMove, MaxMin):- 
+	Value =< Alpha, 
+	evaluate_and_choose_ab(Moves, InitPlayer, Depth, Alpha, Beta, Move1, BestMove, MaxMin).
 
-move(Move, CouleurJoueur, CouleurJoueurSuivant, Ligne):-
-    CouleurJoueur == rouge,
-    CouleurJoueurSuivant = jaune,
-    insererJeton(Move, Y, CouleurJoueur),
-    Ligne is Y,
-    !.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Min Max classique   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-undoMove(Move, Ligne, CouleurJoueur):-
-    retract(caseTest(Move, Ligne, CouleurJoueur)).
 
-evaluate(CouleurJoueur, Value, Move):- 
-    eval(CouleurJoueur, Score, Move),
-    Value is Score.
+evaluate_and_choose([Move|Moves], InitPlayer, Depth, MaxMin, Record, Best) :-
+	move(Move, MaxMin, InitPlayer),
+	minimax(Depth, InitPlayer, MaxMin, MoveX, Value),
+	update(Move, Value, Record, Record1, MaxMin),
+	undo_move(Move, Color),
+	evaluate_and_choose(Moves, InitPlayer, Depth, MaxMin, Record1, Best).
 
-poidsCaseTableau(1).
-poidsDefensif(1).
-poidsCaseOffensif(1).
-poidsPiegeSept(1).
-poidsOpening(1).
+evaluate_and_choose([], InitPlayer, Depth, MaxMin, Record, Record).
+
+minimax(0, InitPlayer, MaxMin, Move, Value) :-
+	value(InitPlayer, V),
+	Value is V.
+
+minimax(Depth, InitPlayer, MaxMin, Move, Value) :-
+	Depth > 0,
+	findall(X, (between(1,7,X),coupValide(X)), Moves),
+	NewDepth is Depth-1,
+	NewMaxMin is -MaxMin,
+	evaluate_and_choose(Moves, InitPlayer, NewDepth, NewMaxMin, (nil, 1000*MaxMin), (Move, Value)).
+
+update(Move, Value, (Move1, Value1), (Move1, Value1), MinMax) :-
+	MinMax > 0,
+	Value =< Value1,!.
+
+update(Move, Value, (Move1, Value1), (Move, Value), MinMax) :-
+	MinMax > 0,
+	Value > Value1,!.
+
+update(Move, Value, (Move1, Value1), (Move1, Value1), MinMax) :-
+	MinMax < 0,
+	Value > Value1,!.
+
+update(Move, Value, (Move1, Value1), (Move, Value), MinMax) :-
+	MinMax < 0,
+	Value =< Value1.
+
+move(Move, MinMax, InitPlayer) :- 
+	InitPlayer==jaune, 
+	MinMax < 0,
+	calculPositionJeton(Move, 1, X),
+	assert(caseTest(Move, X, rouge)),!.
+
+move(Move, MinMax, InitPlayer) :- 
+	InitPlayer==jaune, 
+	MinMax > 0,
+	calculPositionJeton(Move, 1, X),
+	assert(caseTest(Move, X, jaune)),!.
+
+move(Move, MinMax, InitPlayer) :- 
+	InitPlayer==rouge, 
+	MinMax > 0,
+	calculPositionJeton(Move, 1, X),
+	assert(caseTest(Move, X, rouge)),!.
+
+move(Move, MinMax, InitPlayer) :- 
+	InitPlayer==rouge, 
+	MinMax < 0,
+	calculPositionJeton(Move, 1, X),
+	assert(caseTest(Move, X, jaune)).
+
+calculPositionJetonTest(X,YCheck,YCheck) :- 
+	caseVideTest(X,YCheck), !.
+calculPositionJetonTest(X,YCheck,Y) :- 
+	incr(YCheck, YCheck1), calculPositionJeton(X,YCheck1,Y).
+
+undo_move(Move, Color) :-
+	calculPositionJetonTest(Move, 1, X),
+	LinePos is X-1,
+	retract(caseTest(Move, LinePos, Color)).
+
+value(InitPlayer, V) :-
+	eval(InitPlayer,Score),
+	V is Score.
+
+
 
 %Move is the X position to be played
-eval(CouleurJoueur, Score, Move):- 
+eval(CouleurJoueur, Score):- 
     %%%%%% Call heuristics %%%%%%
     poidsCaseTableau(PoidsCaseTableau),
     poidsDefensif(PoidsDefensif),
-    poidsCaseOffensif(PoidsOffensif),
+    poidsOffensif(PoidsOffensif),
     poidsPiegeSept(PoidsPiege),
     poidsOpening(PoidsOpening),
+    poidsPiegeAdjacence(PoidsAdjacence),
     defensiveIA(CouleurJoueur, ScoreDefensif, PoidsDefensif),
     offensiveIA(CouleurJoueur, ScoreOffensif, PoidsOffensif),
     positionIA(CouleurJoueur, ScorePosition, PoidsCaseTableau),
     piege7IA(CouleurJoueur, ScorePiege, PoidsPiege),
+    piegeAdjacence(CouleurJoueur, ScoreAdjacence, PoidsAdjacence),
     opening(CouleurJoueur, ScoreOpening, PoidsOpening),
-    forceColumnMove(CouleurJoueur, ScoreVictoire),
-    random_between(-1, 1, Perturbation),
-    Score is ScoreDefensif * PoidsDefensif
+    random_between(0, 0, Perturbation),
+    ScoreFinal is ScoreDefensif * PoidsDefensif
             + ScorePosition * PoidsCaseTableau
             + ScoreOffensif * PoidsOffensif
-            %+ ScorePiege * PoidsPiege
-            %+ ScoreOpening * PoidsOpening
-            + Perturbation,
-    writefacts(Move, Score).
+            + ScorePiege * PoidsPiege
+            + ScoreOpening * PoidsOpening
+            + ScoreAdjacence * PoidsAdjacence,
+    Score is ScoreFinal * (1 + Perturbation/100).
 
-writefacts(X, Score):-
-    open('evals.txt',append,Out),
-    write(Out, X),
-    write(Out, '   '),
-    write(Out, Score),
-    write(Out, '\n'),
-    close(Out).
 
-%Forces the AI to play on the 2nd column because it gives a huge score to do so
-forceColumnMove(CouleurJoueur, Score):-
-    (caseTest(3, 6, _);
-    caseTest(3, 5, _);
-    caseTest(3, 4, _);
-    caseTest(3, 3, _);
-    caseTest(3, 2, _);
-    caseTest(3, 1, _)),
-    Score is 1000.
-
-%Always a valid score of 0 if not true
-forceColumnMove(_, 0).
-
-dummyVictoire(CouleurJoueur, Score):-
-    (caseTest(3, 1, _)),
-    Score is 1000.
-
-dummyVictoire(_, 0).
 
 %%%%% placerJeton %%%%%
 % coupValide/1(-Colonne)
@@ -591,16 +640,14 @@ piege7BasPositionnement(_,0).
 opening(CouleurJoueur, ScoreOpening, PoidsOpening) :- 
     PoidsOpening > 0,
     couleurAdverse(CouleurJoueur, JoueurAdverse),
-    findall(Nb, compterCaseOccuper(CouleurJoueur,Nb), SommeJ), 
-    findall(NbAdverse, compterCaseOccuper(CouleurJoueur,NbAdverse), SommeA), 
-    sum(SommeA, SommeAdverse),
-    sum(SommeJ, SommeJoueur),
-    evaluerOpening(SommeJoueur, CouleurJoueur, SommeAdverse, JoueurAdverse, S),
-    ScoreOpening is S.
+    caseTest(X,1,CouleurJoueur), 
+    caseTest(X2,1,JoueurAdverse),
+    evaluerOpening(X, CouleurJoueur, ScoreJoueur),
+    evaluerOpening(X2, JoueurAdverse, ScoreJoueurAdverse),
+    ScoreOpening is ScoreJoueur - ScoreJoueurAdverse,! .
 opening(_, 0, _).    
 
-evaluerOpening(1, CouleurJoueur, 0, _, Score):- 
-    caseTest(X,_,CouleurJoueur),
+evaluerOpening(X, rouge, Score):- 
     (X == 1, Score is -1000, !;
      X == 2, Score is -1000, !;
      X == 3, Score is 0, !;
@@ -609,8 +656,7 @@ evaluerOpening(1, CouleurJoueur, 0, _, Score):-
      X == 6, Score is -1000, !;
      X == 7, Score is -1000, !;   
         Score is 0).
-evaluerOpening(1, CouleurJoueur, 1, _, Score):- 
-    caseTest(X,_,CouleurJoueur),
+evaluerOpening(X, jaune, Score):- 
     (X == 1, Score is -1000, !;
      X == 2, Score is -1000, !;
      X == 3, Score is 500, !;
@@ -618,9 +664,61 @@ evaluerOpening(1, CouleurJoueur, 1, _, Score):-
      X == 5, Score is 500, !;
      X == 6, Score is -1000, !;
      X == 7, Score is -1000, !;   
-        Score is 0). 
-evaluerOpening(_, _, _, _,0).
+        Score is 0).
 
-compterCaseOccuper(CouleurJoueur, Somme):-
+
+/****************************************************************
+ * 
+ * Evaluation de l'adjacence
+ * 
+ * 
+ * 
+ * *********************/    
+
+piegeAdjacence(CouleurJoueur, ScoreAdjacence, PoidsAdjacence) :- 
+    PoidsAdjacence > 0,
+    couleurAdverse(CouleurJoueur, JoueurAdverse),
+    findall(S, evaluerAdjacence(CouleurJoueur, S),ScoreJoueur),
+    sum(ScoreJoueur, ScoresJoueur),
+    findall(S, evaluerAdjacence(JoueurAdverse, S),ScoreAdverse),
+    sum(ScoreAdverse, ScoresAdverse),
+    ScoreAdjacence is (ScoresJoueur - (2 * ScoresAdverse)).
+piegeAdjacence(_, 0, _).  
+
+
+evaluerAdjacence(CouleurJoueur, ScoreJoueur):-
     caseTest(X,Y,CouleurJoueur),
-    Somme is 1.
+    calculerScoreAlignement(X, Y, CouleurJoueur, S),
+    ScoreJoueur is S.  
+  
+
+calculerScoreAjacence(X,Y, CouleurJoueur, Score ):-
+    evaluerLigne(X,Y,CouleurJoueur,LigneGauche1, LigneGauche2, LigneGauche3, LigneDroite1, LigneDroite2, LigneDroite3),
+    adjacence3(LigneGauche1, LigneGauche2, LigneGauche3, LigneDroite1, LigneDroite2, LigneDroite3, Score1),
+    adjacence2(LigneGauche1, LigneGauche2, LigneDroite1, LigneDroite2, Score2),
+    adjacence1(LigneGauche1, LigneDroite1, Score3),
+    Score is Score1 + Score2 + Score3.
+
+%_,x,x,x,_%
+adjacence3(Gauche1, Gauche2, Gauche3, Droite1, Droite2, Droite3, Score):-
+    (  
+        Droite1==1, Droite2==1, Droite3==0, Gauche1==0, Score is 1000;
+        Droite1==1, Droite2==0, Gauche1==1, Gauche2==0, Score is 1000;
+        Gauche1==1, Gauche2==1, Gauche3==0, Droite1==0, Score is 1000);
+    (Score is 0). 
+
+
+%_,x,x,_%
+adjacence2(Gauche1, Gauche2 , Droite1, Droite2 , Score):-
+    (  
+        Droite1==1, Droite2==0, Gauche1==0, Score is 120;
+        Gauche1==0, Droite1==0, Gauche2==0, Score is 120
+        );
+    (Score is 0).     
+
+%_,x,_%
+adjacence1(Gauche1, Droite1, Score):-
+    (  
+        Droite1==0, Gauche1==0, Score is 60
+        );
+    (Score is 0).         

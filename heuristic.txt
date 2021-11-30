@@ -1,10 +1,10 @@
 -7 x
 -densité
--feature
+-feature x
 -position x
 -victoire x
 -danger de l'autre x
--opening
+-opening x
 
 
 statégies gagnantes :
