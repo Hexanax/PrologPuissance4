@@ -595,9 +595,9 @@ evaluerOpening(1, CouleurJoueur, 1, _, Score):-
     caseTest(X,_,CouleurJoueur),
     (X == 1, Score is -1000, !;
      X == 2, Score is -1000, !;
-     X == 3, Score is 0, !;
+     X == 3, Score is 500, !;
      X == 4, Score is 1000, !;
-     X == 5, Score is 0, !;
+     X == 5, Score is 500, !;
      X == 6, Score is -1000, !;
      X == 7, Score is -1000, !;   
         Score is 0). 
