@@ -9,7 +9,8 @@
 	coupValide/1,
 	typeJoueur/2,
 	changerJoueur/0,
-	insererJeton/3
+	insererJeton/3,
+	calculPositionJeton/3
 ]).
 
 %%%%%%%%%%%%%%%%

@@ -6,6 +6,7 @@
 :- module(ia, [iaAleatoire/1
 			  ,iaMinimax/7
 			  ,iaAlphaBeta/8
+			  ,iaAlphabeta/8
 			  ,poidsPuissance3/1
 			  ,poidsPosition/1
 			  ,poidsDensite/1
@@ -25,6 +26,7 @@
 :- use_module(util).
 :- use_module(miniMax).
 :- use_module(alphaBeta).
+:- use_module(alphaBetaBis).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Prédicats dynamiques %%
@@ -55,6 +57,9 @@ iaAleatoire(Coup) :-
 iaAleatoire(Coup) :-
 	iaAleatoire(Coup).
 
+initCaseTest :- case(X,Y,Z), assert(caseTest(X,Y,Z)), false. %on assert une caseTest pour toutes les cases.
+initCaseTest.
+
 iaMinimax(JoueurCourant,Coup,Profondeur,PoidsPosition,PoidsPuissance3,PoidsDensite,PoidsAdjacence) :-
 	assert(poidsPosition(PoidsPosition)),
 	assert(poidsPuissance3(PoidsPuissance3)),
@@ -68,6 +73,24 @@ iaAlphaBeta(JoueurCourant,Coup,Profondeur,PoidsDefensif, PoidsCaseTableau, Poids
 	assert(poidsCaseOffensif(PoidsOffensif)),
 	assert(poidsPiegeSept(PoidsPiege)),
 	assert(poidsOpening(PoidsOpening)),
+	Alpha is -9999999,
+	Beta is 9999999,
+	alphaBeta(Profondeur, JoueurCourant, Alpha, Beta, Coup, _, JoueurCourant).
+
+iaAlphabeta(JoueurCourant,Coup,Profondeur,PoidsPosition,PoidsAlignement,PoidsBlocage,PoidsAlignementNew,PoidsBlocageNew) :-
+	assert(poidsPosition(PoidsPosition)),
+	assert(poidsAlignement(PoidsAlignement)),
+	assert(poidsBlocage(PoidsBlocage)),
+	assert(poidsAlignementNew(PoidsAlignementNew)),
+	assert(poidsBlocageNew(PoidsBlocageNew)),
+	assert(initDepth(Profondeur)),
+	initCaseTest,
+	ennemi(JoueurCourant,AutreJoueur),
+	assert(ennemiTest(AutreJoueur)),
 	Alpha is -99999,
 	Beta is 99999,
-	alphaBeta(Profondeur, JoueurCourant, Alpha, Beta, Coup, _, JoueurCourant).
+	MaxMin is -1,
+	alpha_beta(Profondeur,JoueurCourant, Alpha, Beta, Coup, _, MaxMin),
+	retract(ennemiTest(AutreJoueur)),
+	retract(initDepth(Profondeur)),
+	retractall(caseTest(_,_,_)).
