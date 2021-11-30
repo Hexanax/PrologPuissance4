@@ -3,7 +3,7 @@ import re
 
 main_cmd = 'swipl -g runTest({nb_iterations},{ia1},{ia2}),halt -f testIAs.pl'
 
-nb_iterations = 10
+nb_iterations = 5
 
 lines={}
 lines[0]=' ;'

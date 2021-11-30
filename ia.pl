@@ -10,7 +10,8 @@
             poidsPuissance3/1,
             poidsPosition/1,
             poidsDensite/1,
-            poidsAdjacence/1
+            poidsAdjacence/1,
+            startPosition/1
           ]).
 
 %%%%%%%%%%%%%%%%
@@ -29,6 +30,7 @@
 :- dynamic poidsPosition/1.
 :- dynamic poidsDensite/1.
 :- dynamic poidsAdjacence/1.
+:- (dynamic startPosition/1).
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Prédicats publics %%
@@ -42,14 +44,15 @@ iaAleatoire(Coup) :-
 iaAleatoire(Coup) :-
 	iaAleatoire(Coup).
 
-iaMinimax(JoueurCourant,Coup,Profondeur,PoidsPosition,PoidsPuissance3,PoidsDensite,PoidsAdjacence) :-
-	assert(poidsPosition(PoidsPosition)),
-	assert(poidsPuissance3(PoidsPuissance3)),
-	assert(poidsDensite(PoidsDensite)),
-	assert(poidsAdjacence(PoidsAdjacence)),
-	parcoursArbre(JoueurCourant,Profondeur,Coup,_).
-
+iaMinimax(JoueurCourant, Coup, Profondeur, PoidsPosition, PoidsPuissance3, PoidsDensite, PoidsAdjacence) :-
+    assert(startPosition(1)),
+    assert(poidsPosition(PoidsPosition)),
+    assert(poidsPuissance3(PoidsPuissance3)),
+    assert(poidsDensite(PoidsDensite)),
+    assert(poidsAdjacence(PoidsAdjacence)),
+    parcoursArbre(JoueurCourant, Profondeur, Coup, _).
 iaMinimaxCandidat(JoueurCourant, Coup, Profondeur, PoidsPosition, PoidsPuissance3, PoidsDensite, PoidsAdjacence) :-
+    assert(startPosition(2)),
     assert(poidsPosition(PoidsPosition)),
     assert(poidsPuissance3(PoidsPuissance3)),
     assert(poidsDensite(PoidsDensite)),

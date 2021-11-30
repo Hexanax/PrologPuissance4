@@ -39,11 +39,11 @@ t_gagne_diagonale2 :-
 
 t_minimax_prof1 :-
 	assert(evaluation(test1)),
-	parcoursArbre(rouge,1,R,Value),retract(evaluation(X)),R==4,Value==10.
+	parcoursArbre(rouge,1,R,Value, StartPosition),retract(evaluation(X)),R==4,Value==10.
 
 t_minimax_prof2 :-
 	assert(evaluation(test1)),
-	parcoursArbre(rouge,2,R,Value),retract(evaluation(X)),R==1,Value==(-5).
+	parcoursArbre(rouge,2,R,Value, StartPosition),retract(evaluation(X)),R==1,Value==(-5).
 
 
 

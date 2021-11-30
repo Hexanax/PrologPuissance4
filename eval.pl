@@ -64,17 +64,28 @@ evalCases(Courant,ScoreCase) :-
 	evalCase(X,Y,Courant,ScoreCase).
 
 % renvoie un score entre -400 et 400
-evalCase(X,Y,Courant,ScoreCase) :-
-	nbColonnes(NBCOLONNES),
-	nbLignes(NBLIGNES),
-	ponderationJ(X, Y, Courant, PonderationJoueur),
-	CentreX is NBCOLONNES // 2 + 1,
-	CentreY is NBLIGNES // 2 + 1,
-	Dx is X - CentreX,
-	Dy is Y - CentreY,
-	abs(Dx,AbsX),
-	abs(Dy,AbsY),
-	ScoreCase is ( 200/(AbsX+1) + 200/(AbsY+1) )*PonderationJoueur.
+evalCase(X, Y, Courant, ScoreCase) :-
+    (   nbColonnes(NBCOLONNES),
+        nbLignes(NBLIGNES),
+        ponderationJ(X, Y, Courant, PonderationJoueur),
+        startPosition(1)
+    ->  CentreX is NBCOLONNES//2+1,
+        CentreY is NBLIGNES//2+1,
+        Dx is X-CentreX,
+        Dy is Y-CentreY,
+        abs(Dx, AbsX),
+        abs(Dy, AbsY),
+        ScoreCase is (200/(AbsX+1)+200/(AbsY+1))*PonderationJoueur
+    ; 
+	% else
+   CentreX is NBCOLONNES//2+1,
+	% CentreY is NBLIGNES // 2 + 1,
+        Dx is X-CentreX,
+        Dy is Y,
+        abs(Dx, AbsX),
+        abs(Dy, AbsY),
+        ScoreCase is (200/(AbsX+1)+200/(AbsY+1))*PonderationJoueur
+    ).
 
 ponderationJ(X,Y, Courant,1) :-
 	caseTest(X,Y,Courant), !.
