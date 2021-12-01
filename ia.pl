@@ -45,14 +45,16 @@ iaAleatoire(Coup) :-
 	iaAleatoire(Coup).
 
 iaMinimax(JoueurCourant, Coup, Profondeur, PoidsPosition, PoidsPuissance3, PoidsDensite, PoidsAdjacence) :-
-    assert(startPosition(1)),
+    assert(startPosition(0)),
+    retract(startPosition(0)),
     assert(poidsPosition(PoidsPosition)),
     assert(poidsPuissance3(PoidsPuissance3)),
     assert(poidsDensite(PoidsDensite)),
     assert(poidsAdjacence(PoidsAdjacence)),
     parcoursArbre(JoueurCourant, Profondeur, Coup, _).
 iaMinimaxCandidat(JoueurCourant, Coup, Profondeur, PoidsPosition, PoidsPuissance3, PoidsDensite, PoidsAdjacence) :-
-    assert(startPosition(2)),
+    assert(startPosition(1)),
+    retract(startPosition(1)),
     assert(poidsPosition(PoidsPosition)),
     assert(poidsPuissance3(PoidsPuissance3)),
     assert(poidsDensite(PoidsDensite)),

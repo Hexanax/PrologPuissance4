@@ -65,10 +65,11 @@ evalCases(Courant,ScoreCase) :-
 
 % renvoie un score entre -400 et 400
 evalCase(X, Y, Courant, ScoreCase) :-
-    (   nbColonnes(NBCOLONNES),
-        nbLignes(NBLIGNES),
-        ponderationJ(X, Y, Courant, PonderationJoueur),
-        startPosition(1)
+    nbColonnes(NBCOLONNES),
+    nbLignes(NBLIGNES),
+    ponderationJ(X, Y, Courant, PonderationJoueur),
+	%%%%% Option par defaut, le centre du tableau = mieux %%%%%
+    (   startPosition(0)
     ->  CentreX is NBCOLONNES//2+1,
         CentreY is NBLIGNES//2+1,
         Dx is X-CentreX,
@@ -77,14 +78,40 @@ evalCase(X, Y, Courant, ScoreCase) :-
         abs(Dy, AbsY),
         ScoreCase is (200/(AbsX+1)+200/(AbsY+1))*PonderationJoueur
     ; 
-	% else
-   CentreX is NBCOLONNES//2+1,
-	% CentreY is NBLIGNES // 2 + 1,
+	%%%%% Option 1, le centre-bas du tableau = mieux %%%%%
+   startPosition(1)
+    ->  CentreX is NBCOLONNES//2+1,
         Dx is X-CentreX,
         Dy is Y,
         abs(Dx, AbsX),
         abs(Dy, AbsY),
         ScoreCase is (200/(AbsX+1)+200/(AbsY+1))*PonderationJoueur
+	%%%%% Option 2, le centre-haut du tableau = mieux %%%%%
+    ;   startPosition(2)
+    ->  CentreX is NBCOLONNES//2+1,
+        CentreY is NBLIGNES,
+        Dx is X-CentreX,
+        Dy is Y-CentreY,
+        abs(Dx, AbsX),
+        abs(Dy, AbsY),
+        ScoreCase is (200/(AbsX+1)+200/(AbsY+1))*PonderationJoueur
+		%%%%% Option 3, le centre-bas du tableau = BEAUCOUP mieux %%%%%
+    ;   startPosition(3)
+    ->  CentreX is NBCOLONNES//2+1,
+        CentreY is NBLIGNES//2+1,
+        Dx is X-CentreX,
+        Dy is Y-CentreY,
+        abs(Dx, AbsX),
+        abs(Dy, AbsY),
+        ScoreCase is (200/((AbsX+1)*(AbsX+1))+200/((AbsY+1)*(AbsY+1)))*PonderationJoueur
+		%%%%% Option 4, le centre-bas du tableau = UN PEU mieux %%%%%
+    ;   CentreX is NBCOLONNES//2+1,
+        CentreY is NBLIGNES//2+1,
+        Dx is X-CentreX,
+        Dy is Y-CentreY,
+        abs(Dx, AbsX),
+        abs(Dy, AbsY),
+        ScoreCase is (200/sqrt(AbsX+1)+200/sqrt(AbsY+1))*PonderationJoueur
     ).
 
 ponderationJ(X,Y, Courant,1) :-
